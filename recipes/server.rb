@@ -28,10 +28,11 @@ ssh_hosts = Array.new
 
 node['ossec']['agents'].each do |n|
 
-  ssh_hosts << n['ipaddress'] if n['keys']
+  ssh_hosts << n['ipaddress']
+  subnet = n['ipaddress'].split('.')[0..2].join('.') + '.0/24'
 
-  execute "#{agent_manager} -a --ip #{n['ipaddress']} -n #{n['fqdn'][0..31]}" do
-    not_if "grep '#{n['fqdn'][0..31]} #{n['ipaddress']}' #{node['ossec']['user']['dir']}/etc/client.keys"
+  execute "#{agent_manager} -a --ip #{subnet} -n #{n['name']}" do
+    not_if "grep '#{n['name']} #{subnet}' #{node['ossec']['user']['dir']}/etc/client.keys"
   end
 
 end
