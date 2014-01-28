@@ -20,15 +20,13 @@
 node.set['ossec']['user']['install_type'] = "server"
 node.set['ossec']['server']['maxagents']  = 1024
 
-node.save
-
 include_recipe "ossec"
 
 agent_manager = "#{node['ossec']['user']['dir']}/bin/ossec-batch-manager.pl"
 
 ssh_hosts = Array.new
 
-search(:node, "ossec:[* TO *] NOT role:#{node['ossec']['server_role']}") do |n|
+node['ossec']['agents'].each do |n|
 
   ssh_hosts << n['ipaddress'] if n['keys']
 
@@ -47,8 +45,6 @@ template "/usr/local/bin/dist-ossec-keys.sh" do
   not_if { ssh_hosts.empty? }
 end
 
-ossec_key = data_bag_item("ossec", "ssh")
-
 directory "#{node['ossec']['user']['dir']}/.ssh" do
   owner "root"
   group "ossec"
@@ -60,7 +56,7 @@ template "#{node['ossec']['user']['dir']}/.ssh/id_rsa" do
   owner "root"
   group "ossec"
   mode 0600
-  variables(:key => ossec_key['privkey'])
+  variables(:key => node['ossec']['server']['ssh_key']['private'])
 end
 
 cron "distribute-ossec-keys" do

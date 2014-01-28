@@ -28,6 +28,14 @@ default['ossec']['syscheck_freq'] = 79200
 # server-only
 default['ossec']['server']['maxagents'] = 256
 
+default['ossec']['server']['ip'] = ''
+default['ossec']['server']['ssh_key'] = {
+  "private" => '',
+  "public" => ''
+}
+
+default['ossec']['agents'] = {}
+
 # used to populate config files and preload values for install
 default['ossec']['user']['language'] = "en"
 default['ossec']['user']['install_type'] = "local"

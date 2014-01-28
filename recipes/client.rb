@@ -17,24 +17,10 @@
 # limitations under the License.
 #
 
-ossec_server = Array.new
-
-if node.run_list.roles.include?(node['ossec']['server_role'])
-  ossec_server << node['ipaddress']
-else
-  search(:node,"role:#{node['ossec']['server_role']}") do |n|
-    ossec_server << n['ipaddress']
-  end
-end
-
 node.set['ossec']['user']['install_type'] = "agent"
-node.set['ossec']['user']['agent_server_ip'] = ossec_server.first
-
-node.save
+node.set['ossec']['user']['agent_server_ip'] = node['ossec']['server']['ip']
 
 include_recipe "ossec"
-
-ossec_key = data_bag_item("ossec", "ssh")
 
 user "ossecd" do
   comment "OSSEC Distributor"
@@ -55,7 +41,7 @@ template "#{node['ossec']['user']['dir']}/.ssh/authorized_keys" do
   owner "ossecd"
   group "ossec"
   mode 0600
-  variables(:key => ossec_key['pubkey'])
+  variables(:key => node['ossec']['server']['ssh_key']['public'])
 end
 
 file "#{node['ossec']['user']['dir']}/etc/client.keys" do
