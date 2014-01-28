@@ -26,15 +26,19 @@ agent_manager = "#{node['ossec']['user']['dir']}/bin/ossec-batch-manager.pl"
 
 ssh_hosts = Array.new
 
-node['ossec']['agents'].each do |n|
+directory "#{node['ossec']['user']['dir']}/etc/client.sent" do
+  owner "root"
+  group "ossec"
+  mode 0750
+end
 
-  ssh_hosts << n['ipaddress']
+node['ossec']['agents'].each do |n|
   subnet = n['ipaddress'].split('.')[0..2].join('.') + '.0/24'
+  ssh_hosts << "#{n['ipaddress']}:#{n['name']}:#{subnet}"
 
   execute "#{agent_manager} -a --ip #{subnet} -n #{n['name']}" do
     not_if "grep '#{n['name']} #{subnet}' #{node['ossec']['user']['dir']}/etc/client.keys"
   end
-
 end
 
 template "/usr/local/bin/dist-ossec-keys.sh" do
@@ -61,7 +65,7 @@ template "#{node['ossec']['user']['dir']}/.ssh/id_rsa" do
 end
 
 cron "distribute-ossec-keys" do
-  minute "0"
+  minute "*/30"
   command "/usr/local/bin/dist-ossec-keys.sh"
   only_if { ::File.exists?("#{node['ossec']['user']['dir']}/etc/client.keys") }
 end

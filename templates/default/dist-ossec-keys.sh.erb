@@ -3,8 +3,17 @@
 
 for host in <%= @ssh_hosts.join(' ') %>
 do
-  key=`mktemp`
-  grep $host <%= node['ossec']['user']['dir'] %>/etc/client.keys > $key
-  scp -i <%= node['ossec']['user']['dir'] %>/.ssh/id_rsa -B -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $key ossecd@$host:<%= node['ossec']['user']['dir'] %>/etc/client.keys >/dev/null 2>/dev/null
-  rm $key
+	agent=(`echo $host | tr ":" "\n"`)
+	ip=${agent[0]}
+	name=${agent[1]}
+	subnet=${agent[2]}
+	if [ ! -f "<%= node['ossec']['user']['dir'] %>/etc/client.sent/$name.$subnet" ]; then
+		key=`mktemp`
+		grep "$name $subnet" <%= node['ossec']['user']['dir'] %>/etc/client.keys > $key
+		scp -i <%= node['ossec']['user']['dir'] %>/.ssh/id_rsa -B -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $key ossecd@$ip:<%= node['ossec']['user']['dir'] %>/etc/client.keys
+		if [ $? -eq "0" ]; then
+			touch <%= node['ossec']['user']['dir'] %>/etc/client.sent/$name.$subnet
+		fi
+		rm $key
+	fi
 done
