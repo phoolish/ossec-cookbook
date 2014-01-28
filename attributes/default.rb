@@ -34,7 +34,7 @@ default['ossec']['server']['ssh_key'] = {
   "public" => ''
 }
 
-default['ossec']['agents'] = {}
+default['ossec']['agents'] = []
 
 # used to populate config files and preload values for install
 default['ossec']['user']['language'] = "en"
