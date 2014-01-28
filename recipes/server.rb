@@ -39,6 +39,11 @@ node['ossec']['agents'].each do |n|
   execute "#{agent_manager} -a --ip #{subnet} -n #{n['name']}" do
     not_if "grep '#{n['name']} #{subnet}' #{node['ossec']['user']['dir']}/etc/client.keys"
   end
+
+  file "#{node['ossec']['user']['dir']}/etc/client.sent/#{n['name']}.#{subnet}" do
+    action :delete
+    only_if { n['force'] }
+  end
 end
 
 template "/usr/local/bin/dist-ossec-keys.sh" do
